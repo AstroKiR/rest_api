@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -14,7 +14,7 @@ var count int
 
 type Book struct {
 	ID     int     `json:"id"`
-	Isdn   string  `json:"isdn"`
+	Isbn   string  `json:"isbn"`
 	Title  string  `json:"title"`
 	Author *Author `json:"author"`
 }
@@ -27,12 +27,25 @@ type Author struct {
 // A slice that will contain the books
 var books []Book
 
-func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<h1>Run Successfully!</h1>")
+func getBooks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
 
 func main() {
+
+	author1 := Author{FirstName: "Stanislaw", LastName: "Lem"}
+	author2 := Author{FirstName: "Arthur", LastName: "Clarke"}
+
+	count = 0
+
+	books = append(books, Book{ID: count, Isbn: "123456", Title: "Solaris", Author: &author1})
+	count++
+
+	books = append(books, Book{ID: count, Isbn: "456280", Title: "2001: A Space Odyssey", Author: &author2})
+	count++
+
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", home)
+	router.HandleFunc("/api/books", getBooks).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
