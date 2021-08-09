@@ -75,6 +75,21 @@ func updateBook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&Book{})
 }
 
+func deleteBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/json")
+	vars := mux.Vars(r)
+	var tmpBook Book
+	for index, book := range books {
+		if strconv.Itoa(book.ID) == vars["id"] {
+			tmpBook = books[index]
+			books = append(books[:index], books[index+1:]...)
+			_ = json.NewEncoder(w).Encode(tmpBook)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Book{})
+}
+
 func main() {
 
 	author1 := Author{FirstName: "Stanislaw", LastName: "Lem"}
@@ -89,9 +104,12 @@ func main() {
 	count++
 
 	router := mux.NewRouter().StrictSlash(true)
+
 	router.HandleFunc("/api/books", getBooks).Methods("GET")
 	router.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	router.HandleFunc("/api/books", addBook).Methods("POST")
 	router.HandleFunc("/api/books/{id}", updateBook).Methods("PUT")
+	router.HandleFunc("/api/books/{id}", deleteBook).Methods("DELETE")
+
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
