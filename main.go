@@ -58,6 +58,23 @@ func addBook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(book)
 }
 
+func updateBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/json")
+	vars := mux.Vars(r)
+
+	var tmpBook Book
+	for index, book := range books {
+		if strconv.Itoa(book.ID) == vars["id"] {
+			_ = json.NewDecoder(r.Body).Decode(&tmpBook)
+			tmpBook.ID = index
+			books[index] = tmpBook
+			json.NewEncoder(w).Encode(books[index])
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Book{})
+}
+
 func main() {
 
 	author1 := Author{FirstName: "Stanislaw", LastName: "Lem"}
@@ -75,5 +92,6 @@ func main() {
 	router.HandleFunc("/api/books", getBooks).Methods("GET")
 	router.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	router.HandleFunc("/api/books", addBook).Methods("POST")
+	router.HandleFunc("/api/books/{id}", updateBook).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
