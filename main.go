@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -32,6 +33,18 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 }
 
+func getBook(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
+	for _, book := range books {
+		if strconv.Itoa(book.ID) == vars["id"] {
+			json.NewEncoder(w).Encode(book)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Book{})
+}
+
 func main() {
 
 	author1 := Author{FirstName: "Stanislaw", LastName: "Lem"}
@@ -47,5 +60,6 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/api/books", getBooks).Methods("GET")
+	router.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
